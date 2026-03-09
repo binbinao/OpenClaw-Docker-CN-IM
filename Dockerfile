@@ -1,4 +1,5 @@
 # OpenClaw Docker 镜像
+# 预装中国 IM 平台插件 + Top 10 热门技能
 FROM node:22-slim
 
 # 设置工作目录
@@ -40,14 +41,15 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /root/.npm /root/.cache
 
-# 2. 插件安装（作为 node 用户以避免后期权限修复带来的镜像膨胀）
-RUN mkdir -p /home/node/.openclaw/workspace /home/node/.openclaw/extensions && \
+# 2. 创建目录结构
+RUN mkdir -p /home/node/.openclaw/workspace/skills /home/node/.openclaw/extensions && \
     chown -R node:node /home/node
 
 USER node
 ENV HOME=/home/node
 WORKDIR /home/node
 
+# 3. 安装 IM 平台插件
 RUN cd /home/node/.openclaw/extensions && \
   git clone --depth 1 https://github.com/soimy/openclaw-channel-dingtalk.git dingtalk && \
   cd dingtalk && \
@@ -66,8 +68,44 @@ RUN cd /home/node/.openclaw/extensions && \
   find /home/node/.openclaw/extensions -name ".git" -type d -exec rm -rf {} + && \
   rm -rf /home/node/.openclaw/qqbot/.git && \
   rm -rf /tmp/* /home/node/.npm /home/node/.cache
-  
-# 3. 最终配置
+
+# 4. 安装热门技能 (Top 10)
+# 来源: https://github.com/LeoYeAI/openclaw-master-skills
+# 技能列表:
+#   - pdf: PDF 文件处理
+#   - docx: Word 文档处理
+#   - pptx: PowerPoint 演示文稿处理
+#   - xlsx: Excel 电子表格处理
+#   - skill-creator: 创建新技能
+#   - mcp-builder: MCP 服务器构建
+#   - brainstorming: 创意头脑风暴
+#   - systematic-debugging: 系统化调试
+#   - writing-plans: 编写实施计划
+#   - test-driven-development: 测试驱动开发
+RUN SKILLS_DIR="/home/node/.openclaw/workspace/skills" && \
+    # 安装 Anthropic 官方技能
+    git clone --depth 1 https://github.com/anthropics/skills.git /tmp/anthropics-skills && \
+    cp -r /tmp/anthropics-skills/skills/pdf "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/docx "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/pptx "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/xlsx "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/skill-creator "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/mcp-builder "$SKILLS_DIR/" && \
+    cp -r /tmp/anthropics-skills/skills/webapp-testing "$SKILLS_DIR/" && \
+    rm -rf /tmp/anthropics-skills && \
+    # 安装 Superpowers 技能集
+    git clone --depth 1 https://github.com/obra/superpowers.git /tmp/superpowers && \
+    cp -r /tmp/superpowers/skills/brainstorming "$SKILLS_DIR/" && \
+    cp -r /tmp/superpowers/skills/systematic-debugging "$SKILLS_DIR/" && \
+    cp -r /tmp/superpowers/skills/writing-plans "$SKILLS_DIR/" && \
+    cp -r /tmp/superpowers/skills/test-driven-development "$SKILLS_DIR/" && \
+    cp -r /tmp/superpowers/skills/executing-plans "$SKILLS_DIR/" && \
+    cp -r /tmp/superpowers/skills/verification-before-completion "$SKILLS_DIR/" && \
+    rm -rf /tmp/superpowers && \
+    # 清理
+    rm -rf /tmp/* /home/node/.npm /home/node/.cache
+
+# 5. 最终配置
 USER root
 
 # 复制初始化脚本

@@ -53,7 +53,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
+            duobinji/openclaw-docker-cn-im
             ${{ env.REGISTRY_GHCR }}/${{ github.repository }}
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}
@@ -81,5 +81,5 @@ jobs:
           echo ""
           echo "🔖 版本号: ${{ steps.version.outputs.version }}"
           echo ""
-          echo "📦 Docker Hub: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}:${{ steps.version.outputs.version }}"
+          echo "📦 Docker Hub: duobinji/openclaw-docker-cn-im:${{ steps.version.outputs.version }}"
           echo "📦 GHCR: ${{ env.REGISTRY_GHCR }}/${{ github.repository }}:${{ steps.version.outputs.version }}"
